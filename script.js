@@ -11,6 +11,8 @@ var artifact_substat_weights = {'---': 0, 'HP': 6, 'ATK': 6, 'DEF': 6, 'HP%': 4,
 
 var selected_substats = [];
 
+var desired_substats = [];
+
 // populate mainstat dropdown dynamically
 function populateMainstatDropdown(dropdown_value) {
   var mainstat_dropdown = document.getElementById('mainstat-dropdown');
@@ -58,7 +60,7 @@ function populateSubstatsDropdown(dropdown_value) {
       option_element.textContent = substat_dropdown_value;
       substat_dropdown.appendChild(option_element);
       substat_dropdown.value = substat_dropdown_value;
-    }        
+    }
 
     // add remaining options
     filtered_options.forEach(function(option) {
@@ -74,31 +76,37 @@ function populateSubstatsDropdown(dropdown_value) {
       var substat_0_roll_id = 'substat' + i + '+0';
       var substat_0_roll = document.getElementById(substat_0_roll_id);
       substat_0_roll.checked = true;
+      // remove substat from filtered options programatically
+      if (substat_dropdown_value !== '---') {
+        substat_dropdown.dispatchEvent(new Event('change'));
+        break; // not required but removes unnecessary work
+      }
     }
   }
 }
 
+function extractDesiredSubstats() {
+  desired_substats = []
+  document.querySelectorAll('.desired-substat-toggle').forEach(function(toggle) {
+    if (toggle.checked) {
+      desired_substats.push(toggle.value);
+    }
+  });
+}
+
 function submit() {
-  let rolls = validateInputs();
+  var rolls = validateInputs();
   if (Object.keys(rolls).length === 0 && rolls.constructor === Object) {
     console.log('Invalid Inputs');
     return;
   }
 
-  console.log(JSON.stringify(rolls));
-
-  let probabilities = calculateProbabilities(rolls.priority_substats, rolls.total_rolls, rolls.enhancement_rolls, rolls.priority_rolls);
-
-  console.log(JSON.stringify(probabilities));
-  // call printProbabilityTable()
+  var probabilities = calculateProbabilities(rolls.priority_substats, rolls.total_rolls, rolls.enhancement_rolls, rolls.priority_rolls);
+  
+  printProbabilityTable(probabilities);
 }
 
 function validateInputs() {
-  // at least 3 substats selected
-  var substats = selected_substats.filter(function(substat) {
-    return substat !== '---';
-  });
-
   // check for artifact and artifact mainstat
   if (document.getElementById('artifact-dropdown').value === '---' || document.getElementById('mainstat-dropdown').value === '---') {
     console.log('An artifact and mainstat must be selected');
@@ -106,24 +114,29 @@ function validateInputs() {
   }
 
   // check for at least three substats
+  var substats = selected_substats.filter(function(substat) {
+    return substat !== '---';
+  });
   if (substats.length < 3) {
     console.log('Select at least three substats');
     return {};
   }
 
+  // check individual rolls
+  extractDesiredSubstats();
   var total_rolls = 0;
   var priority_rolls = 0;
   var priority_substats = 0;
-  // check individual rolls
   for (var i = 1; i <= 4; i++) {
     var rolls = document.querySelector('input[name="substat-' + i + '-rolls"]:checked').value;
-    if (document.getElementById('substat-dropdown' + i).value !== '---') {
+    var substat = document.getElementById('substat-dropdown' + i);
+    if (substat.value !== '---') {
       if (rolls === '0') {
         console.log('Valid substats should have at least one roll');
         return {};
       }
       total_rolls += parseInt(rolls, 10);
-      if (document.getElementById('substat' + i + '-priority').checked) {
+      if (desired_substats.includes(substat.value)) {
         priority_rolls += parseInt(rolls, 10);
         priority_substats += 1;
       }
@@ -135,8 +148,14 @@ function validateInputs() {
     }
   }
 
+  // check invalid roll distribution
+  if (substats.length === 3 && total_rolls > 3) {
+    console.log('Number of rolls requires another substat selection');
+    return {};
+  }
+
   // check total rolls
-  var enhancement_rolls = parseInt(document.querySelector('input[name="enhancement-level-switch"]:checked').value);
+  var enhancement_rolls = parseInt(document.querySelector('input[name="enhancement-level-switch"]:checked').value, 10);
   if (total_rolls < 3 + enhancement_rolls || total_rolls > 4 + enhancement_rolls) {
     console.log('Invalid number of total rolls');
     return {};
@@ -153,17 +172,49 @@ function validateInputs() {
 function calculateProbabilities(priority_substats, total_rolls, enhancement_rolls, priority_rolls) {
   // minimum = current number of priority rolls
   // maximum = current number of priority rolls + remaining enhancement rolls
-  var odds = priority_substats/4;
-  var probabilities = {};
-  /*
-  for (int i = priority_rolls; i <= priority_rolls + 5 - enhancement_rolls; i++) {
 
+  var probabilities = {}
+  var stats = new Statistics([], {});
+
+  if (total_rolls === 3) {
+    console.log('TODO');
+  } else {
+    var odds = priority_substats/4;
+    var remaining_rolls = 5 - enhancement_rolls;
+    var distribution = stats.binomialCumulativeDistribution(remaining_rolls, odds);
+    for (var i = 1; i <= remaining_rolls; i++) {
+      var key = priority_rolls+i;
+      probabilities[key] = 1 - distribution[i-1];
+    }
   }
-  */
+
+  return probabilities;
 }
 
-function printProbabilityTable() {
+function printProbabilityTable(probabilities) {
+  var table = document.getElementById('probability-table');
 
+  // reset the table
+  table.innerHTML = `
+    <tr>
+      <th class="rolls-column cell">Rolls</th>
+      <th class="rolls-column cell">Probability</th>
+    </tr>
+  `;
+
+  Object.keys(probabilities).forEach(function(n) {
+    var row = table.insertRow();
+    var roll_cell = row.insertCell();
+    roll_cell.innerHTML = n;
+    roll_cell.classList.add('rolls-column');
+    roll_cell.classList.add('cell');
+    var probability_cell = row.insertCell();
+    probability_cell.classList.add('rolls-column');
+    probability_cell.classList.add('cell');
+    probability_cell.innerHTML = probabilities[n];
+  });
+
+  document.getElementById('table-container').style.display = 'block';
 }
 
 // event listeners
@@ -189,9 +240,14 @@ document.querySelectorAll('.substat-dropdown').forEach(function(dropdown) {
       return dropdown.value;
     })
     .filter(function(option) {
-      return option !== '';
+      return option !== '---';
     });
     var mainstat_dropdown = document.getElementById('mainstat-dropdown');
     populateSubstatsDropdown(mainstat_dropdown.value);
   });
 });
+
+
+
+
+

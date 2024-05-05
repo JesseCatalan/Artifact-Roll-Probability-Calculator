@@ -3,7 +3,6 @@ body {
   color: white;
   margin: 0;
   padding: 0;
-  background-color: black;
 }
 .container {
   max-width: 50vw;
@@ -55,7 +54,7 @@ td {
   align-items: center;
   position: relative;
   border-radius: 10px;
-  height: 90%;
+  height: 100%;
   width: 100%;
   box-sizing: border-box;
 }
@@ -76,6 +75,12 @@ td {
 .radio-container input:checked + label {
   background-color: #2196F3;
 }
+.radio-input {
+  width: calc(100%/6); /* the rolls column radio container ignores this length due to exceeding the length of its parent */
+  height: 100%;
+  border: 1px solid black;
+  box-sizing: border-box;
+}
 .desired-substats-container {
   display: flex;
   flex-direction: column;
@@ -87,14 +92,19 @@ td {
   display: inline-block;
   text-align: center;
 }
+.desired-substat-toggle {
+  display: none;
+}
 .desired-substat-container {
   margin: 5px;
-}
-.radio-input {
-  width: calc(100%/6);
-  height: 100%;
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #666666;
   border: 1px solid black;
-  box-sizing: border-box;
+  cursor: pointer;
+}
+.desired-substat-toggle:checked + label {
+    background-color: #2196F3;
 }
 .enhancement-container {
   display: flex;
@@ -110,7 +120,6 @@ td {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
 }
 button {
   height: 34px;
@@ -118,10 +127,24 @@ button {
   border: 0px;
   border-radius: 5px;
   color: white;
+  padding: 5px 10px;
 }
 button:hover {
   background-color: #1d8ae0;
 }
 button:active {
   background-color: #0280e0;
+}
+.table-container {
+  display: none;
+  max-width: 50vw;
+  margin: 50px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #1f1f1f;
+}
+.cell {
+  box-sizing: border-box;
+  border: 1px solid #ccc;
 }
