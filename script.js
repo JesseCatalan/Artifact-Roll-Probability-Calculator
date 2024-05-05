@@ -102,7 +102,7 @@ function submit() {
   }
 
   var probabilities = calculateProbabilities(rolls.priority_substats, rolls.total_rolls, rolls.enhancement_rolls, rolls.priority_rolls);
-  
+
   printProbabilityTable(probabilities);
 }
 
@@ -122,8 +122,8 @@ function validateInputs() {
     return {};
   }
 
-  // check individual rolls
   extractDesiredSubstats();
+  // check individual rolls
   var total_rolls = 0;
   var priority_rolls = 0;
   var priority_substats = 0;
@@ -177,8 +177,39 @@ function calculateProbabilities(priority_substats, total_rolls, enhancement_roll
   var stats = new Statistics([], {});
 
   if (total_rolls === 3) {
-    console.log('TODO');
+    // calculate odds for 3-line artifact
+    var success_weight = 0;
+    var total_weight = 0;
+    for (var [substat, weight] of Object.entries(artifact_substat_weights)) {
+      if (!selected_substats.includes(substat)) {
+        total_weight += weight;
+        if (desired_substats.includes(substat)) {
+          success_weight += weight;
+        }
+      }
+    }
+
+    var roll_odds = success_weight / total_weight;
+    var remaining_rolls = 5 - enhancement_rolls - 1;
+    // probability of success
+    var success_odds = (priority_substats+1)/4;
+    var success_distribution = stats.binomialCumulativeDistribution(remaining_rolls, success_odds);
+    var key = priority_rolls+1;
+    probabilities[key] = roll_odds;
+    for (var i = 1; i <= remaining_rolls; i++) {
+      key = priority_rolls+1+i;
+      probabilities[key] = (1 - success_distribution[i-1]) * roll_odds;
+    }
+
+    // probability of failure
+    var failure_odds = priority_substats/4;
+    var failure_distribution = stats.binomialCumulativeDistribution(remaining_rolls, failure_odds);
+    for (var i = 1; i <= remaining_rolls; i++) {
+      key = priority_rolls+i;
+      probabilities[key] += (1 - failure_distribution[i-1]) * (1 - roll_odds);
+    }
   } else {
+    // calculate odds for 4-line artifact
     var odds = priority_substats/4;
     var remaining_rolls = 5 - enhancement_rolls;
     var distribution = stats.binomialCumulativeDistribution(remaining_rolls, odds);
