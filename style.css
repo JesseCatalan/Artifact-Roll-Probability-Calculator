@@ -5,7 +5,7 @@ body {
   padding: 0;
 }
 .container {
-  max-width: 50vw;
+  max-width: 100%;
   margin: 50px auto;
   padding: 20px;
   border: 1px solid #ccc;
@@ -137,7 +137,7 @@ button:active {
 }
 .table-container {
   display: none;
-  max-width: 50vw;
+  max-width: 100%;
   margin: 50px auto;
   padding: 20px;
   border: 1px solid #ccc;
@@ -147,4 +147,21 @@ button:active {
 .cell {
   box-sizing: border-box;
   border: 1px solid #ccc;
+}
+
+@media only screen and (min-width : 992px) {
+  .container {
+    max-width: 75vw;
+  }
+  .table-container {
+    max-width: 75vw;
+  }
+}
+@media only screen and (min-width : 1200px) {
+  .container {
+    max-width: 60vw;
+  }
+  .table-container {
+    max-width: 60vw;
+  }
 }
