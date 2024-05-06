@@ -96,8 +96,8 @@ function extractDesiredSubstats() {
 
 function submit() {
   var rolls = validateInputs();
-  if (Object.keys(rolls).length === 0 && rolls.constructor === Object) {
-    console.log('Invalid Inputs');
+  if (rolls.error_message) {
+    alert('Invalid Inputs: ' + rolls.error_message);
     return;
   }
 
@@ -109,8 +109,7 @@ function submit() {
 function validateInputs() {
   // check for artifact and artifact mainstat
   if (document.getElementById('artifact-dropdown').value === '---' || document.getElementById('mainstat-dropdown').value === '---') {
-    console.log('An artifact and mainstat must be selected');
-    return {};
+    return {error_message: 'An artifact and mainstat must be selected'};
   }
 
   // check for at least three substats
@@ -118,8 +117,7 @@ function validateInputs() {
     return substat !== '---';
   });
   if (substats.length < 3) {
-    console.log('Select at least three substats');
-    return {};
+    return {error_message: 'Select at least three substats'};
   }
 
   extractDesiredSubstats();
@@ -132,8 +130,7 @@ function validateInputs() {
     var substat = document.getElementById('substat-dropdown' + i);
     if (substat.value !== '---') {
       if (rolls === '0') {
-        console.log('Valid substats should have at least one roll');
-        return {};
+        return {error_message: 'Valid substats should have at least one roll'};
       }
       total_rolls += parseInt(rolls, 10);
       if (desired_substats.includes(substat.value)) {
@@ -142,23 +139,20 @@ function validateInputs() {
       }
     } else {
       if (rolls !== '0') {
-        console.log('Invalid substats should have zero rolls');
-        return {};
+        return {error_message: 'Invalid substats should have zero rolls'};
       }
     }
   }
 
   // check invalid roll distribution
   if (substats.length === 3 && total_rolls > 3) {
-    console.log('Number of rolls requires another substat selection');
-    return {};
+    return {error_message: 'Number of rolls requires another substat selection'};
   }
 
   // check total rolls
   var enhancement_rolls = parseInt(document.querySelector('input[name="enhancement-level-switch"]:checked').value, 10);
   if (total_rolls < 3 + enhancement_rolls || total_rolls > 4 + enhancement_rolls) {
-    console.log('Invalid number of total rolls');
-    return {};
+    return {error_message: 'Invalid number of total rolls'};
   }
 
   return {
