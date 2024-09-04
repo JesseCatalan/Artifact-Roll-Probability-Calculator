@@ -175,7 +175,7 @@ function calculateProbabilities(priority_substats, total_rolls, enhancement_roll
     var success_weight = 0;
     var total_weight = 0;
     for (var [substat, weight] of Object.entries(artifact_substat_weights)) {
-      if (!selected_substats.includes(substat)) {
+      if (!selected_substats.includes(substat) && (substat !== document.getElementById('mainstat-dropdown').value)) {
         total_weight += weight;
         if (desired_substats.includes(substat)) {
           success_weight += weight;
